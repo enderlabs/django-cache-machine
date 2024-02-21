@@ -27,17 +27,25 @@ SETTINGS = (
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Run the tests for django-cache-machine. '
-                                     'If no options are specified, tests will be run with '
-                                     'all settings files and without coverage.py.')
-    parser.add_argument('--with-coverage', action='store_true',
-                        help='Run tests with coverage.py and display coverage report')
-    parser.add_argument('--settings', choices=SETTINGS,
-                        help='Run tests only for the specified settings file')
+    parser = argparse.ArgumentParser(
+        description='Run the tests for django-cache-machine. '
+        'If no options are specified, tests will be run with '
+        'all settings files and without coverage.py.'
+    )
+    parser.add_argument(
+        '--with-coverage',
+        action='store_true',
+        help='Run tests with coverage.py and display coverage report',
+    )
+    parser.add_argument(
+        '--settings',
+        choices=SETTINGS,
+        help='Run tests only for the specified settings file',
+    )
     args = parser.parse_args()
     settings = args.settings and [args.settings] or SETTINGS
     results = []
-    django_admin = check_output(['which', 'django-admin.py']).strip()
+    django_admin = check_output(['which', 'django-admin']).strip()
     for i, settings_module in enumerate(settings):
         print('Running tests for: %s' % settings_module)
         os.environ['DJANGO_SETTINGS_MODULE'] = 'cache_machine.%s' % settings_module

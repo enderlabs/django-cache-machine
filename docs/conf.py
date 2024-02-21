@@ -15,8 +15,8 @@ master_doc = 'index'
 extensions = ['sphinx.ext.autodoc']
 
 # General information about the project.
-project = u'Cache Machine'
-copyright = u'2010, The Zamboni Collective'
+project = 'Cache Machine'
+copyright = '2010, The Zamboni Collective'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

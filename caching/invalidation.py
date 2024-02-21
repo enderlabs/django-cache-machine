@@ -1,17 +1,15 @@
-from __future__ import unicode_literals
-
 import collections
 import functools
 import hashlib
 import logging
 import socket
+from urllib.parse import parse_qsl
 
 from django.conf import settings
 from django.core.cache import cache as default_cache
 from django.core.cache import caches
 from django.core.cache.backends.base import InvalidCacheBackendError
-from django.utils import encoding,translation
-from urllib.parse import parse_qsl
+from django.utils import encoding, translation
 
 from caching import config
 
@@ -56,6 +54,7 @@ def safe_redis(return_type):
 
     return_type (optionally a callable) will be returned if there is an error.
     """
+
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kw):
@@ -68,12 +67,13 @@ def safe_redis(return_type):
                     return return_type()
                 else:
                     return return_type
+
         return wrapper
+
     return decorator
 
 
 class Invalidator(object):
-
     def invalidate_objects(self, objects, is_new_instance=False, model_cls=None):
         """Invalidate all the flush lists for the given ``objects``."""
         obj_keys = [k for o in objects for k in o._cache_keys()]
@@ -81,8 +81,12 @@ class Invalidator(object):
         # If whole-model invalidation on create is enabled, include this model's
         # key in the list to be invalidated. Note that the key itself won't
         # contain anything in the cache, but its corresponding flush key will.
-        if (config.CACHE_INVALIDATE_ON_CREATE == config.WHOLE_MODEL and
-           is_new_instance and model_cls and hasattr(model_cls, 'model_flush_key')):
+        if (
+            config.CACHE_INVALIDATE_ON_CREATE == config.WHOLE_MODEL
+            and is_new_instance
+            and model_cls
+            and hasattr(model_cls, 'model_flush_key')
+        ):
             flush_keys.append(model_cls.model_flush_key())
         if not obj_keys or not flush_keys:
             return
@@ -160,9 +164,11 @@ class Invalidator(object):
 
     def get_flush_lists(self, keys):
         """Return a set of object keys from the lists in `keys`."""
-        return set(e for flush_list in
-                   [_f for _f in list(cache.get_many(keys).values()) if _f]
-                   for e in flush_list)
+        return set(
+            e
+            for flush_list in [_f for _f in list(cache.get_many(keys).values()) if _f]
+            for e in flush_list
+        )
 
     def clear_flush_lists(self, keys):
         """Remove the given keys from the database."""
@@ -170,7 +176,6 @@ class Invalidator(object):
 
 
 class RedisInvalidator(Invalidator):
-
     def safe_key(self, key):
         if ' ' in key or '\n' in key:
             log.warning('BAD KEY: "%s"' % key)
@@ -199,7 +204,6 @@ class RedisInvalidator(Invalidator):
 
 
 class NullInvalidator(Invalidator):
-
     def add_to_flush_list(self, mapping):
         return
 
@@ -211,8 +215,7 @@ def parse_backend_uri(backend_uri):
     """
     backend_uri_sliced = backend_uri.split('://')
     if len(backend_uri_sliced) > 2:
-        raise InvalidCacheBackendError(
-            "Backend URI can't have more than one scheme://")
+        raise InvalidCacheBackendError("Backend URI can't have more than one scheme://")
     elif len(backend_uri_sliced) == 2:
         rest = backend_uri_sliced[1]
     else:
@@ -221,7 +224,7 @@ def parse_backend_uri(backend_uri):
     host = rest
     qpos = rest.find('?')
     if qpos != -1:
-        params = dict(parse_qsl(rest[qpos + 1:]))
+        params = dict(parse_qsl(rest[qpos + 1 :]))
         host = rest[:qpos]
     else:
         params = {}
@@ -254,8 +257,9 @@ def get_redis_backend():
     else:
         host = 'localhost'
         port = 6379
-    return redislib.Redis(host=host, port=port, db=db, password=password,
-                          socket_timeout=socket_timeout)
+    return redislib.Redis(
+        host=host, port=port, db=db, password=password, socket_timeout=socket_timeout
+    )
 
 
 if config.CACHE_MACHINE_NO_INVALIDATION:

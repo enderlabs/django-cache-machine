@@ -1,20 +1,21 @@
-import jinja2
+from __future__ import unicode_literals
+
 import logging
 import pickle
 import sys
 import unittest
 
+import jinja2
 from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.test import TestCase, TransactionTestCase
-from django.utils import translation, encoding
+from django.utils import encoding, translation
 
-from caching import base, invalidation, config
+from caching import base, config, invalidation
 
 from .testapp.models import Addon, User
 
-
-if sys.version_info >= (3, ):
+if sys.version_info >= (3,):
     from unittest import mock
 else:
     import mock
@@ -40,7 +41,9 @@ class CachingTestCase(TestCase):
     def test_flush_key(self):
         """flush_key should work for objects or strings."""
         a = Addon.objects.get(id=1)
-        self.assertEqual(base.flush_key(a.get_cache_key(incl_db=False)), base.flush_key(a))
+        self.assertEqual(
+            base.flush_key(a.get_cache_key(incl_db=False)), base.flush_key(a)
+        )
 
     def test_cache_key(self):
         a = Addon.objects.get(id=1)
@@ -218,7 +221,8 @@ class CachingTestCase(TestCase):
         def check(q, expected):
             t = env.from_string(
                 "{% cache q %}{% for x in q %}{{ x.id }}:{{ x.val }};"
-                "{% endfor %}{% endcache %}")
+                "{% endfor %}{% endcache %}"
+            )
             self.assertEqual(t.render(q=q), expected)
 
         # Get the template in cache, then hijack iterator to make sure we're
@@ -249,7 +253,8 @@ class CachingTestCase(TestCase):
 
         def check(obj, expected):
             t = env.from_string(
-                '{% cache obj, 30 %}{{ obj.id }}:{{ obj.val }}{% endcache %}')
+                '{% cache obj, 30 %}{{ obj.id }}:{{ obj.val }}{% endcache %}'
+            )
             self.assertEqual(t.render(obj=obj), expected)
 
         check(addon, '1:42')
@@ -260,8 +265,10 @@ class CachingTestCase(TestCase):
     def test_jinja_multiple_tags(self):
         env = jinja2.Environment(extensions=['caching.ext.cache'])
         addon = Addon.objects.get(id=1)
-        template = ("{% cache obj %}{{ obj.id }}{% endcache %}\n"
-                    "{% cache obj %}{{ obj.val }}{% endcache %}")
+        template = (
+            "{% cache obj %}{{ obj.id }}{% endcache %}\n"
+            "{% cache obj %}{{ obj.val }}{% endcache %}"
+        )
 
         def check(obj, expected):
             t = env.from_string(template)
@@ -276,8 +283,10 @@ class CachingTestCase(TestCase):
         env = jinja2.Environment(extensions=['caching.ext.cache'])
         addon = Addon.objects.get(id=1)
 
-        template = ('{% cache obj, extra=[obj.key] %}{{ obj.id }}:'
-                    '{{ obj.key }}{% endcache %}')
+        template = (
+            "{% cache obj, extra=[obj.key] %}{{ obj.id }}:"
+            "{{ obj.key }}{% endcache %}"
+        )
 
         def check(obj, expected):
             t = env.from_string(template)
@@ -288,8 +297,10 @@ class CachingTestCase(TestCase):
         addon.key = 2
         check(addon, '1:2')
 
-        template = ('{% cache obj, 10, extra=[obj.key] %}{{ obj.id }}:'
-                    '{{ obj.key }}{% endcache %}')
+        template = (
+            "{% cache obj, 10, extra=[obj.key] %}{{ obj.id }}:"
+            "{{ obj.key }}{% endcache %}"
+        )
         addon.key = 1
         check(addon, '1:1')
         addon.key = 2
@@ -304,7 +315,8 @@ class CachingTestCase(TestCase):
 
         a = Addon.objects.get(id=1)
 
-        def f(): return base.cached_with(a, expensive, 'key')
+        def f():
+            return base.cached_with(a, expensive, 'key')
 
         # Only gets called once.
         self.assertEqual(f(), 1)
@@ -325,7 +337,8 @@ class CachingTestCase(TestCase):
         counter.reset_mock()
         q = Addon.objects.filter(id=1)
 
-        def f(): return base.cached_with(q, expensive, 'key')
+        def f():
+            return base.cached_with(q, expensive, 'key')
 
         # Only gets called once.
         self.assertEqual(f(), 1)
@@ -344,16 +357,19 @@ class CachingTestCase(TestCase):
             counter()
             return counter.call_count
 
-        self.assertEqual(base.cached_with([], f, 'key'), 1)
+        self.assertEqual(base.cached_with([], f, "key"), 1)
 
     def test_cached_with_unicode(self):
-        u = encoding.smart_bytes('\\u05ea\\u05d9\\u05d0\\u05d5\\u05e8 '
-                                 '\\u05d0\\u05d5\\u05e1\\u05e3')
+        u = encoding.smart_bytes(
+            '\\u05ea\\u05d9\\u05d0\\u05d5\\u05e8 ' '\\u05d0\\u05d5\\u05e1\\u05e3'
+        )
         obj = mock.Mock()
         obj.query_key.return_value = 'xxx'
         obj.flush_key.return_value = 'key'
 
-        def f(): return 1
+        def f():
+            return 1
+
         self.assertEqual(base.cached_with(obj, f, 'adf:%s' % u), 1)
 
     def test_cached_method(self):
@@ -407,7 +423,8 @@ class CachingTestCase(TestCase):
 
     @unittest.skipUnless(
         any(['memcache' in c['BACKEND'] for c in settings.CACHES.values()]),
-        'This test requires that Django use memcache')
+        'This test requires that Django use memcache',
+    )
     @mock.patch('memcache.Client.set')
     def test_infinite_timeout(self, mock_set):
         """
@@ -415,7 +432,7 @@ class CachingTestCase(TestCase):
         """
         cache.set('foo', 'bar', timeout=None)
         # for memcached, 0 timeout means store forever
-        mock_set.assert_called_with(':1:foo', 'bar', 0)
+        mock_set.assert_called_with(":1:foo", "bar", 0)
 
     def test_cache_and_no_cache(self):
         """Whatever happens last sticks."""
@@ -428,10 +445,10 @@ class CachingTestCase(TestCase):
         self.assertEqual(q.timeout, 12)
         self.assertNotEqual(no_cache.timeout, 12)
 
-        self.assertFalse(hasattr(no_cache.get(), 'from_cache'))
+        self.assertFalse(hasattr(no_cache.get(), "from_cache"))
 
         self.assertEqual(q.get().id, 1)
-        self.assertTrue(hasattr(q.get(), 'from_cache'))
+        self.assertTrue(hasattr(q.get(), "from_cache"))
 
     @mock.patch('caching.base.cache')
     def test_cache_machine_timeout(self, cache):
@@ -495,8 +512,9 @@ class CachingTestCase(TestCase):
             self.assertEqual(base.invalidator.get_flush_lists(None), set([1]))
 
     def test_parse_backend_uri(self):
-        """ Test that parse_backend_uri works as intended. Regression for #92. """
+        """Test that parse_backend_uri works as intended. Regression for #92."""
         from caching.invalidation import parse_backend_uri
+
         uri = 'redis://127.0.0.1:6379?socket_timeout=5'
         host, params = parse_backend_uri(uri)
         self.assertEqual(host, '127.0.0.1:6379')
@@ -504,7 +522,7 @@ class CachingTestCase(TestCase):
 
     @mock.patch('caching.config.CACHE_INVALIDATE_ON_CREATE', 'whole-model')
     def test_invalidate_on_create_enabled(self):
-        """ Test that creating new objects invalidates cached queries for that model. """
+        """Test that creating new objects invalidates cached queries for that model."""
         self.assertEqual([a.name for a in User.objects.all()], ['fliggy', 'clouseroo'])
         User.objects.create(name='spam')
         users = User.objects.all()
@@ -554,57 +572,63 @@ class CachingTestCase(TestCase):
 # use TransactionTestCase so that ['TEST']['MIRROR'] setting works
 # see https://code.djangoproject.com/ticket/23718
 class MultiDbTestCase(TransactionTestCase):
-    multi_db = True
-    fixtures = ['tests/testapp/fixtures/testapp/test_cache.json']
-    extra_apps = ['tests.testapp']
+    databases = {"default", "primary2", "replica", "replica2"}
+    fixtures = ["tests/testapp/fixtures/testapp/test_cache.json"]
+    extra_apps = ["tests.testapp"]
 
     def test_multidb_cache(self):
-        """ Test where master and slave DB result in two different cache keys """
+        """Test where primary and replica DB result in two different cache keys"""
         self.assertIs(Addon.objects.get(id=1).from_cache, False)
         self.assertIs(Addon.objects.get(id=1).from_cache, True)
 
-        from_slave = Addon.objects.using('slave').get(id=1)
-        self.assertIs(from_slave.from_cache, False)
-        self.assertEqual(from_slave._state.db, 'slave')
+        from_replica = Addon.objects.using("replica").get(id=1)
+        self.assertIs(from_replica.from_cache, False)
+        self.assertEqual(from_replica._state.db, "replica")
 
     def test_multidb_fetch_by_id(self):
-        """ Test where master and slave DB result in two different cache keys with FETCH_BY_ID"""
+        """
+        Test where primary and replica DB result in two different cache keys
+        with FETCH_BY_ID
+        """
         with self.settings(FETCH_BY_ID=True):
             self.assertIs(Addon.objects.get(id=1).from_cache, False)
             self.assertIs(Addon.objects.get(id=1).from_cache, True)
 
-            from_slave = Addon.objects.using('slave').get(id=1)
-            self.assertIs(from_slave.from_cache, False)
-            self.assertEqual(from_slave._state.db, 'slave')
+            from_replica = Addon.objects.using("replica").get(id=1)
+            self.assertIs(from_replica.from_cache, False)
+            self.assertEqual(from_replica._state.db, "replica")
 
-    def test_multidb_master_slave_invalidation(self):
-        """ Test saving an object on one DB invalidates it for all DBs """
-        log.debug('priming the DB & cache')
-        master_obj = User.objects.using('default').create(name='new-test-user')
-        slave_obj = User.objects.using('slave').get(name='new-test-user')
-        self.assertIs(slave_obj.from_cache, False)
-        log.debug('deleting the original object')
-        User.objects.using('default').filter(pk=slave_obj.pk).delete()
-        log.debug('re-creating record with a new primary key')
-        master_obj = User.objects.using('default').create(name='new-test-user')
-        log.debug('attempting to force re-fetch from DB (should not use cache)')
-        slave_obj = User.objects.using('slave').get(name='new-test-user')
-        self.assertIs(slave_obj.from_cache, False)
-        self.assertEqual(slave_obj.pk, master_obj.pk)
+    def test_multidb_primary_replica_invalidation(self):
+        """Test saving an object on one DB invalidates it for all DBs"""
+        log.debug("priming the DB & cache")
+        primary_obj = User.objects.using("default").create(name="new-test-user")
+        replica_obj = User.objects.using("replica").get(name="new-test-user")
+        self.assertIs(replica_obj.from_cache, False)
+        log.debug("deleting the original object")
+        User.objects.using("default").filter(pk=replica_obj.pk).delete()
+        log.debug("re-creating record with a new primary key")
+        primary_obj = User.objects.using("default").create(name="new-test-user")
+        log.debug("attempting to force re-fetch from DB (should not use cache)")
+        replica_obj = User.objects.using("replica").get(name="new-test-user")
+        self.assertIs(replica_obj.from_cache, False)
+        self.assertEqual(replica_obj.pk, primary_obj.pk)
 
     def test_multidb_no_db_crossover(self):
-        """ Test no crossover of objects with identical PKs """
-        master_obj = User.objects.using('default').create(name='new-test-user')
-        master_obj2 = User.objects.using('master2').create(pk=master_obj.pk, name='other-test-user')
+        """Test no crossover of objects with identical PKs"""
+        primary_obj = User.objects.using("default").create(name="new-test-user")
+        primary_obj2 = User.objects.using("primary2").create(
+            pk=primary_obj.pk,
+            name="other-test-user",
+        )
         # prime the cache for the default DB
-        master_obj = User.objects.using('default').get(name='new-test-user')
-        self.assertIs(master_obj.from_cache, False)
-        master_obj = User.objects.using('default').get(name='new-test-user')
-        self.assertIs(master_obj.from_cache, True)
-        # prime the cache for the 2nd master DB
-        master_obj2 = User.objects.using('master2').get(name='other-test-user')
-        self.assertIs(master_obj2.from_cache, False)
-        master_obj2 = User.objects.using('master2').get(name='other-test-user')
-        self.assertIs(master_obj2.from_cache, True)
+        primary_obj = User.objects.using("default").get(name="new-test-user")
+        self.assertIs(primary_obj.from_cache, False)
+        primary_obj = User.objects.using("default").get(name="new-test-user")
+        self.assertIs(primary_obj.from_cache, True)
+        # prime the cache for the 2nd primary DB
+        primary_obj2 = User.objects.using("primary2").get(name="other-test-user")
+        self.assertIs(primary_obj2.from_cache, False)
+        primary_obj2 = User.objects.using("primary2").get(name="other-test-user")
+        self.assertIs(primary_obj2.from_cache, True)
         # ensure no crossover between databases
-        self.assertNotEqual(master_obj.name, master_obj2.name)
+        self.assertNotEqual(primary_obj.name, primary_obj2.name)
