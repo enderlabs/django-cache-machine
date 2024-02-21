@@ -11,7 +11,8 @@ CACHES = {
 }
 
 DATABASES = {
-    "default": dj_database_url.config(default="postgres:///cache_machine_devel"),
+    "default": dj_database_url.config(
+        default="postgres:///cache_machine_devel"),
     "primary2": dj_database_url.parse(
         os.getenv("DATABASE_URL_2", "postgres:///cache_machine_devel2")
     ),

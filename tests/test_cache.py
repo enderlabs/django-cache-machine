@@ -147,7 +147,8 @@ class CachingTestCase(TestCase):
         raw_addon = raw[0]
         a = Addon.objects.get(id=1)
         for field in Addon._meta.fields:
-            self.assertEqual(getattr(a, field.name), getattr(raw_addon, field.name))
+            self.assertEqual(
+                getattr(a, field.name), getattr(raw_addon, field.name))
         self.assertIs(raw_addon.from_cache, False)
 
         cached = list(Addon.objects.raw(sql))
@@ -155,7 +156,8 @@ class CachingTestCase(TestCase):
         cached_addon = cached[0]
         a = Addon.objects.get(id=1)
         for field in Addon._meta.fields:
-            self.assertEqual(getattr(a, field.name), getattr(cached_addon, field.name))
+            self.assertEqual(
+                getattr(a, field.name), getattr(cached_addon, field.name))
         self.assertIs(cached_addon.from_cache, True)
 
     def test_raw_cache_params(self):
@@ -361,7 +363,8 @@ class CachingTestCase(TestCase):
 
     def test_cached_with_unicode(self):
         u = encoding.smart_bytes(
-            '\\u05ea\\u05d9\\u05d0\\u05d5\\u05e8 ' '\\u05d0\\u05d5\\u05e1\\u05e3'
+            '\\u05ea\\u05d9\\u05d0\\u05d5\\u05e8 ' '\\u05d0'
+            '\\u05d5\\u05e1\\u05e3'
         )
         obj = mock.Mock()
         obj.query_key.return_value = 'xxx'
@@ -512,7 +515,8 @@ class CachingTestCase(TestCase):
             self.assertEqual(base.invalidator.get_flush_lists(None), set([1]))
 
     def test_parse_backend_uri(self):
-        """Test that parse_backend_uri works as intended. Regression for #92."""
+        """Test that parse_backend_uri works as intended.
+        Regression for #92."""
         from caching.invalidation import parse_backend_uri
 
         uri = 'redis://127.0.0.1:6379?socket_timeout=5'
@@ -522,16 +526,21 @@ class CachingTestCase(TestCase):
 
     @mock.patch('caching.config.CACHE_INVALIDATE_ON_CREATE', 'whole-model')
     def test_invalidate_on_create_enabled(self):
-        """Test that creating new objects invalidates cached queries for that model."""
-        self.assertEqual([a.name for a in User.objects.all()], ['fliggy', 'clouseroo'])
+        """Test that creating new objects invalidates cached queries
+        for that model."""
+        self.assertEqual(
+            [a.name for a in User.objects.all()], ['fliggy', 'clouseroo'])
         User.objects.create(name='spam')
         users = User.objects.all()
-        # our new user should show up and the query should not have come from the cache
-        self.assertEqual([a.name for a in users], ['fliggy', 'clouseroo', 'spam'])
+        # our new user should show up and the query should not have
+        # come from the cache
+        self.assertEqual(
+            [a.name for a in users], ['fliggy', 'clouseroo', 'spam'])
         self.assertFalse(any([u.from_cache for u in users]))
         # if we run it again, it should be cached this time
         users = User.objects.all()
-        self.assertEqual([a.name for a in users], ['fliggy', 'clouseroo', 'spam'])
+        self.assertEqual(
+            [a.name for a in users], ['fliggy', 'clouseroo', 'spam'])
         self.assertTrue(all([u.from_cache for u in User.objects.all()]))
 
     @mock.patch('caching.config.CACHE_INVALIDATE_ON_CREATE', None)
@@ -548,11 +557,12 @@ class CachingTestCase(TestCase):
 
     def test_pickle_queryset(self):
         """
-        Test for CacheingQuerySet.__getstate__ and CachingQuerySet.__setstate__.
+        Test for CacheingQuerySet.__getstate__ and
+        CachingQuerySet.__setstate__.
         """
-        # Make sure CachingQuerySet.timeout, when set to DEFAULT_TIMEOUT, can be safely
-        # pickled/unpickled on/from different Python processes which may have different
-        # underlying values for DEFAULT_TIMEOUT:
+        # Make sure CachingQuerySet.timeout, when set to DEFAULT_TIMEOUT,
+        # can be safely pickled/unpickled on/from different Python processes
+        # which may have different underlying values for DEFAULT_TIMEOUT:
         q1 = Addon.objects.all()
         self.assertEqual(q1.timeout, DEFAULT_TIMEOUT)
         pickled = pickle.dumps(q1)
@@ -577,7 +587,8 @@ class MultiDbTestCase(TransactionTestCase):
     extra_apps = ["tests.testapp"]
 
     def test_multidb_cache(self):
-        """Test where primary and replica DB result in two different cache keys"""
+        """Test where primary and replica DB result in two different
+        cache keys"""
         self.assertIs(Addon.objects.get(id=1).from_cache, False)
         self.assertIs(Addon.objects.get(id=1).from_cache, True)
 
@@ -601,21 +612,26 @@ class MultiDbTestCase(TransactionTestCase):
     def test_multidb_primary_replica_invalidation(self):
         """Test saving an object on one DB invalidates it for all DBs"""
         log.debug("priming the DB & cache")
-        primary_obj = User.objects.using("default").create(name="new-test-user")
-        replica_obj = User.objects.using("replica").get(name="new-test-user")
+        primary_obj = (User.objects.using("default").
+                       create(name="new-test-user"))
+        replica_obj = (User.objects.using("replica").
+                       get(name="new-test-user"))
         self.assertIs(replica_obj.from_cache, False)
         log.debug("deleting the original object")
         User.objects.using("default").filter(pk=replica_obj.pk).delete()
         log.debug("re-creating record with a new primary key")
-        primary_obj = User.objects.using("default").create(name="new-test-user")
-        log.debug("attempting to force re-fetch from DB (should not use cache)")
+        primary_obj = (User.objects.using("default").
+                       create(name="new-test-user"))
+        log.debug(
+            "attempting to force re-fetch from DB (should not use cache)")
         replica_obj = User.objects.using("replica").get(name="new-test-user")
         self.assertIs(replica_obj.from_cache, False)
         self.assertEqual(replica_obj.pk, primary_obj.pk)
 
     def test_multidb_no_db_crossover(self):
         """Test no crossover of objects with identical PKs"""
-        primary_obj = User.objects.using("default").create(name="new-test-user")
+        primary_obj = (User.objects.using("default").
+                       create(name="new-test-user"))
         primary_obj2 = User.objects.using("primary2").create(
             pk=primary_obj.pk,
             name="other-test-user",
@@ -626,9 +642,11 @@ class MultiDbTestCase(TransactionTestCase):
         primary_obj = User.objects.using("default").get(name="new-test-user")
         self.assertIs(primary_obj.from_cache, True)
         # prime the cache for the 2nd primary DB
-        primary_obj2 = User.objects.using("primary2").get(name="other-test-user")
+        primary_obj2 = (User.objects.using("primary2").
+                        get(name="other-test-user"))
         self.assertIs(primary_obj2.from_cache, False)
-        primary_obj2 = User.objects.using("primary2").get(name="other-test-user")
+        primary_obj2 = (User.objects.using("primary2").
+                        get(name="other-test-user"))
         self.assertIs(primary_obj2.from_cache, True)
         # ensure no crossover between databases
         self.assertNotEqual(primary_obj.name, primary_obj2.name)

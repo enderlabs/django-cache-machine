@@ -74,13 +74,15 @@ def safe_redis(return_type):
 
 
 class Invalidator(object):
-    def invalidate_objects(self, objects, is_new_instance=False, model_cls=None):
+    def invalidate_objects(self, objects, is_new_instance=False,
+                           model_cls=None):
         """Invalidate all the flush lists for the given ``objects``."""
         obj_keys = [k for o in objects for k in o._cache_keys()]
         flush_keys = [k for o in objects for k in o._flush_keys()]
-        # If whole-model invalidation on create is enabled, include this model's
-        # key in the list to be invalidated. Note that the key itself won't
-        # contain anything in the cache, but its corresponding flush key will.
+        # If whole-model invalidation on create is enabled, include
+        # this model's key in the list to be invalidated.
+        # Note that the key itself won't contain anything in the cache,
+        # but its corresponding flush key will.
         if (
             config.CACHE_INVALIDATE_ON_CREATE == config.WHOLE_MODEL
             and is_new_instance
@@ -145,7 +147,8 @@ class Invalidator(object):
                 else:
                     obj_keys.add(key)
             if new_keys:
-                log.debug('search for %s found keys %s' % (search_keys, new_keys))
+                log.debug(
+                    'search for %s found keys %s' % (search_keys, new_keys))
                 flush_keys.update(new_keys)
                 search_keys = new_keys
             else:
@@ -166,7 +169,8 @@ class Invalidator(object):
         """Return a set of object keys from the lists in `keys`."""
         return set(
             e
-            for flush_list in [_f for _f in list(cache.get_many(keys).values()) if _f]
+            for flush_list in [
+                _f for _f in list(cache.get_many(keys).values()) if _f]
             for e in flush_list
         )
 
@@ -215,7 +219,8 @@ def parse_backend_uri(backend_uri):
     """
     backend_uri_sliced = backend_uri.split('://')
     if len(backend_uri_sliced) > 2:
-        raise InvalidCacheBackendError("Backend URI can't have more than one scheme://")
+        raise InvalidCacheBackendError(
+            "Backend URI can't have more than one scheme://")
     elif len(backend_uri_sliced) == 2:
         rest = backend_uri_sliced[1]
     else:
@@ -224,7 +229,7 @@ def parse_backend_uri(backend_uri):
     host = rest
     qpos = rest.find('?')
     if qpos != -1:
-        params = dict(parse_qsl(rest[qpos + 1 :]))
+        params = dict(parse_qsl(rest[qpos + 1:]))
         host = rest[:qpos]
     else:
         params = {}
@@ -258,7 +263,8 @@ def get_redis_backend():
         host = 'localhost'
         port = 6379
     return redislib.Redis(
-        host=host, port=port, db=db, password=password, socket_timeout=socket_timeout
+        host=host, port=port, db=db, password=password,
+        socket_timeout=socket_timeout
     )
 
 

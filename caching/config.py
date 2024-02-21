@@ -8,7 +8,8 @@ FETCH_BY_ID = getattr(settings, 'FETCH_BY_ID', False)
 FLUSH = CACHE_PREFIX + ':flush:'
 CACHE_EMPTY_QUERYSETS = getattr(settings, 'CACHE_EMPTY_QUERYSETS', False)
 TIMEOUT = getattr(settings, 'CACHE_COUNT_TIMEOUT', NO_CACHE)
-CACHE_INVALIDATE_ON_CREATE = getattr(settings, 'CACHE_INVALIDATE_ON_CREATE', None)
+CACHE_INVALIDATE_ON_CREATE = getattr(
+    settings, 'CACHE_INVALIDATE_ON_CREATE', None)
 CACHE_MACHINE_NO_INVALIDATION = getattr(
     settings, 'CACHE_MACHINE_NO_INVALIDATION', False
 )

@@ -48,7 +48,8 @@ def main():
     django_admin = check_output(['which', 'django-admin']).strip()
     for i, settings_module in enumerate(settings):
         print('Running tests for: %s' % settings_module)
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'cache_machine.%s' % settings_module
+        os.environ['DJANGO_SETTINGS_MODULE'] = (
+                'cache_machine.%s' % settings_module)
         # append to the existing coverage data for all but the first run
         if args.with_coverage and i > 0:
             test_cmd = ['coverage', 'run', '--append']
@@ -59,7 +60,8 @@ def main():
         test_cmd += [django_admin, 'test', '--keepdb']
         results.append(call(test_cmd))
         if args.with_coverage:
-            results.append(call(['coverage', 'report', '-m', '--fail-under', '70']))
+            results.append(call(
+                ['coverage', 'report', '-m', '--fail-under', '70']))
     sys.exit(any(results) and 1 or 0)
 
 
