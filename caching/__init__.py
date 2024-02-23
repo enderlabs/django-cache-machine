@@ -1,4 +1,2 @@
-from __future__ import unicode_literals
-
-VERSION = ('1', '1', '0')
+VERSION = ('1', '3', '0')
 __version__ = '.'.join(VERSION)
