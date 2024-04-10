@@ -9,44 +9,30 @@ CACHES = {
     },
 }
 
-TEST_RUNNER = 'django_nose.runner.NoseTestSuiteRunner'
-
 DATABASES = {
-    'default': {
-        'NAME': os.environ.get('TRAVIS') and 'travis_ci_test' or 'cache_machine_devel',
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    },
-    'slave': {
-        'NAME': 'cache_machine_devel',
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'TEST_MIRROR': 'default',  # support older Django syntax for now
-    },
-    'master2': {
-        'NAME': os.environ.get('TRAVIS') and 'travis_ci_test2' or 'cache_machine_devel2',
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    },
-    'slave2': {
-        'NAME': 'cache_machine_devel2',
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'TEST_MIRROR': 'master2',  # support older Django syntax for now
-    },
+    "default": dj_database_url.config(default="postgres:///cache_machine_devel"),
+    "primary2": dj_database_url.parse(
+        os.getenv("DATABASE_URL_2", "postgres:///cache_machine_devel2")
+    ),
 }
+for primary, replica in (("default", "replica"), ("primary2", "replica2")):
+    DATABASES[replica] = DATABASES[primary].copy()
+    DATABASES[replica]["TEST"] = {"MIRROR": primary}
 
-INSTALLED_APPS = (
-    'django_nose',
-    'tests.testapp',
-)
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
-SECRET_KEY = 'ok'
+INSTALLED_APPS = ("tests.testapp",)
+
+SECRET_KEY = "ok"
 
 MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.auth.middleware.SessionAuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 )
 
 if django.VERSION[0] >= 2:
