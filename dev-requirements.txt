@@ -10,3 +10,4 @@ dj-database-url
 python-memcached>=1.58
 tox
 tox-gh-actions
+urllib3>=2.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
