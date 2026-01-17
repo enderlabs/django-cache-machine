@@ -19,9 +19,6 @@ log = logging.getLogger('caching')
 
 class CachingManager(models.Manager):
 
-    # This option removed in Django 2.0
-    # Tell Django to use this manager when resolving foreign keys. (Django < 2.0)
-    use_for_related_fields = True
 
     def get_queryset(self):
         return CachingQuerySet(self.model, using=self._db)
@@ -293,10 +290,7 @@ class CachingMixin(object):
         return map(flush_key, self._cache_keys(incl_db=False))
 
     def _get_fk_related_model(self, fk):
-        if django.VERSION[0] >= 2:
-            return fk.remote_field.model
-        else:
-            return fk.rel.to
+        return fk.remote_field.model
 
 
 class CachingRawQuerySet(models.query.RawQuerySet):
