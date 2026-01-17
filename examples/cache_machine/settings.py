@@ -1,10 +1,11 @@
 import os
 
+import dj_database_url
 import django
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
         'LOCATION': 'localhost:11211',
     },
 }
@@ -25,15 +26,12 @@ INSTALLED_APPS = ("tests.testapp",)
 
 SECRET_KEY = "ok"
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.auth.middleware.SessionAuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 )
 
-if django.VERSION[0] >= 2:
-    MIDDLEWARE = MIDDLEWARE_CLASSES
