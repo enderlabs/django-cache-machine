@@ -13,10 +13,9 @@ class User(CachingMixin, models.Model):
 
     objects = CachingManager()
 
-    if django.VERSION[0] >= 2:
-        class Meta:
-            # Tell Django to use this manager when resolving foreign keys. (Django >= 2.0)
-            base_manager_name = 'objects'
+    class Meta:
+        # Tell Django to use this manager when resolving foreign keys. (Django >= 2.0)
+        base_manager_name = 'objects'
 
 
 class Addon(CachingMixin, models.Model):
@@ -29,6 +28,8 @@ class Addon(CachingMixin, models.Model):
     class Meta:
         # without this, Postgres & SQLite return objects in different orders:
         ordering = ('pk',)
+        # Tell Django to use this manager when resolving foreign keys. (Django >= 2.0)
+        base_manager_name = 'objects'
 
     @cached_method
     def calls(self, arg=1):

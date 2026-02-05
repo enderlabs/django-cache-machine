@@ -19,9 +19,10 @@ Requirements
 
 Cache Machine currently works with:
 
-* Django 2.2, 3.0, 3.1, 3.2, 4.0 and 4.2
-* Python 3.6, 3.7, 3.8, 3.9, and 3.10
+* Django 4.2, 5.0, 5.1, and 5.2
+* Python 3.10, 3.11, and 3.12
 
+The last version to support Python 3.9 and Django 4.0/4.1 is ``django-cache-machine==1.2.0``.
 The last version to support Python 2.7 and Django 1.11 is ``django-cache-machine==1.1.0``.
 
 Installation
